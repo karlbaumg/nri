@@ -274,12 +274,12 @@ func (g *Generator) AdjustResources(r *nri.LinuxResources) error {
 	if v := r.GetPids(); v != nil {
 		g.SetLinuxResourcesPidsLimit(v.GetLimit())
 	}
+	log.Infof(ctx, "number of cgroup devices: %d", len(r.GetDevices()))
+	log.Infof(ctx, "cgroup devices %+v", r.GetDevices())
 	for _, dc := range r.GetDevices() {
-		log.Infof(ctx, "adjusting resource device")
-		fmt.Println("adjusting resource device")
+		log.Infof(ctx, "adjusting resource device %+v", dc)
 		if d := dc; d != nil {
-			log.Infof(ctx, "adjusting non-nil resource device")
-			fmt.Printf("adjusting non-nil resource device: %+v MajorGet: %d MinorGet: %d\n", d, d.Major.Get(), d.Minor.Get())
+			log.Infof(ctx, "adjusting non-nil resource device: %+v MajorGet: %d MinorGet: %d\n", d, d.Major.Get(), d.Minor.Get())
 			g.AddLinuxResourcesDevice(d.Allow, d.Type, d.Major.Get(), d.Minor.Get(), d.Access)
 		}
 	}
