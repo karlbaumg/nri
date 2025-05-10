@@ -276,6 +276,11 @@ func (g *Generator) AdjustResources(r *nri.LinuxResources) error {
 	if v := r.GetPids(); v != nil {
 		g.SetLinuxResourcesPidsLimit(v.GetLimit())
 	}
+	for _, dc := range r.GetDevices() {
+		if d := dc; d != nil {
+			g.AddLinuxResourcesDevice(d.Allow, d.Type, d.Major.Get(), d.Minor.Get(), d.Access)
+		}
+	}
 	if g.checkResources != nil {
 		if err := g.checkResources(g.Config.Linux.Resources); err != nil {
 			return fmt.Errorf("failed to adjust resources in OCI Spec: %w", err)
