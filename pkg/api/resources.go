@@ -251,10 +251,19 @@ func (r *LinuxResources) Copy() *LinuxResources {
 	}
 	o.BlockioClass = String(r.BlockioClass)
 	o.RdtClass = String(r.RdtClass)
+	for _, d := range r.Devices {
+		o.Devices = append(o.Devices, &LinuxDeviceCgroup{
+			Type:   d.Type,
+			Major:  Int64(d.GetMajor()),
+			Minor:  Int64(d.GetMinor()),
+			Access: d.Access,
+			Allow:  d.Allow,
+		})
+	}
 
 	var devs []string
 	for _, d := range r.Devices {
-		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+		devs = append(devs, fmt.Sprintf("device rule added %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
 	}
 	fmt.Printf("karlbaumg: (r *LinuxResources) Copy() %s\n", strings.Join(devs, ","))
 
