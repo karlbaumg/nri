@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/containerd/nri/pkg/api"
@@ -204,16 +205,36 @@ func (r *Adaptation) CreateContainer(ctx context.Context, req *CreateContainerRe
 	defer r.removeClosedPlugins()
 
 	result := collectCreateContainerResult(req)
-	for _, plugin := range r.plugins {
+	for i, plugin := range r.plugins {
 		rpl, err := plugin.createContainer(ctx, req)
 		if err != nil {
 			return nil, err
 		}
+		var devs []string
+		for _, d := range rpl.Adjust.Linux.Resources.Devices {
+			devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+		}
+		fmt.Printf("karlbaumg: in-loop before apply idx %d name %s (r *Adaptation) CreateContainer(ctx context.Context, req *CreateContainerRequest)%s\n", i, plugin.name(), strings.Join(devs, ","))
 		err = result.apply(rpl, plugin.name())
 		if err != nil {
 			return nil, err
 		}
+		devs = []string{}
+		for _, d := range rpl.Adjust.Linux.Resources.Devices {
+			devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+		}
+		fmt.Printf("karlbaumg: in-loop after apply idx %d name %s (r *Adaptation) CreateContainer(ctx context.Context, req *CreateContainerRequest)%s\n", i, plugin.name(), strings.Join(devs, ","))
 	}
+	var devs []string
+	for _, d := range result.request.create.Container.Linux.Resources.Devices {
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+	}
+	fmt.Printf("karlbaumg: after loop result.request.create.Container.Linux.Resources.Devices (r *Adaptation) CreateContainer(ctx context.Context, req *CreateContainerRequest)%s\n", strings.Join(devs, ","))
+	devs = []string{}
+	for _, d := range result.reply.adjust.Linux.Resources.Devices {
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+	}
+	fmt.Printf("karlbaumg: after loop result.reply.adjust.Linux.Resources.Devices (r *Adaptation) CreateContainer(ctx context.Context, req *CreateContainerRequest)%s\n", strings.Join(devs, ","))
 
 	return result.createContainerResponse(), nil
 }
