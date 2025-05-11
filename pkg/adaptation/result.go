@@ -707,6 +707,11 @@ func (r *result) adjustResources(resources *LinuxResources, plugin string) error
 		container.Pids = pidv
 		reply.Pids = pidv
 	}
+	for _, d := range resources.Devices {
+		fmt.Printf("rule added %+v", d)
+		container.Devices = append(container.Devices, d)
+		reply.Devices = append(reply.Devices, d)
+	}
 	return nil
 }
 
