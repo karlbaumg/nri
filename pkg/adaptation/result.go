@@ -549,6 +549,12 @@ func (r *result) adjustResources(resources *LinuxResources, plugin string) error
 	container := create.Container.Linux.Resources
 	reply := r.reply.adjust.Linux.Resources
 
+	var devs []string
+	for _, d := range reply.Devices {
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+	}
+	fmt.Printf("karlbaumg: (r *result) adjustResources(resources *LinuxResources, plugin string) %s\n", strings.Join(devs, ","))
+
 	if mem := resources.Memory; mem != nil {
 		if v := mem.GetLimit(); v != nil {
 			if err := r.owners.claimMemLimit(id, plugin); err != nil {

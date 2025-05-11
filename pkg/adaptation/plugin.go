@@ -25,6 +25,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -530,7 +531,12 @@ func (p *plugin) createContainer(ctx context.Context, req *CreateContainerReques
 		}
 		return nil, err
 	}
-
+	fmt.Println("karlbaumg: (p *plugin) createContainer(ctx context.Context, req *CreateContainerRequest) processing devices")
+	var devs []string
+	for _, d := range rpl.Adjust.Linux.Resources.Devices {
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+	}
+	fmt.Printf("karlbaumg: (p *plugin) createContainer(ctx context.Context, req *CreateContainerRequest) devs array: %s", strings.Join(devs, ","))
 	return rpl, nil
 }
 

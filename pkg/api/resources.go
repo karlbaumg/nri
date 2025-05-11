@@ -17,8 +17,10 @@
 package api
 
 import (
+	"fmt"
 	rspec "github.com/opencontainers/runtime-spec/specs-go"
 	cri "k8s.io/cri-api/pkg/apis/runtime/v1"
+	"strings"
 )
 
 // FromOCILinuxResources returns resources from an OCI runtime Spec.
@@ -56,6 +58,7 @@ func FromOCILinuxResources(o *rspec.LinuxResources, _ map[string]string) *LinuxR
 			Limit:    h.Limit,
 		})
 	}
+	var devs []string
 	for _, d := range o.Devices {
 		l.Devices = append(l.Devices, &LinuxDeviceCgroup{
 			Allow:  d.Allow,
@@ -64,7 +67,9 @@ func FromOCILinuxResources(o *rspec.LinuxResources, _ map[string]string) *LinuxR
 			Minor:  Int64(d.Minor),
 			Access: d.Access,
 		})
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major, d.Minor, d.Access))
 	}
+	fmt.Printf("karlbaumg: FromOCILinuxResources(o *rspec.LinuxResources, _ map[string]string) %s\n", strings.Join(devs, ","))
 	if p := o.Pids; p != nil {
 		l.Pids = &LinuxPids{
 			Limit: p.Limit,
@@ -144,6 +149,7 @@ func (r *LinuxResources) ToOCI() *rspec.LinuxResources {
 			o.Unified[k] = v
 		}
 	}
+	var devs []string
 	for _, d := range r.Devices {
 		o.Devices = append(o.Devices, rspec.LinuxDeviceCgroup{
 			Allow:  d.Allow,
@@ -152,7 +158,10 @@ func (r *LinuxResources) ToOCI() *rspec.LinuxResources {
 			Minor:  d.Minor.Get(),
 			Access: d.Access,
 		})
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
 	}
+	fmt.Printf("karlbaumg: (r *LinuxResources) ToOCI() %s\n", strings.Join(devs, ","))
+
 	if r.Pids != nil {
 		o.Pids = &rspec.LinuxPids{
 			Limit: r.Pids.Limit,
@@ -242,6 +251,12 @@ func (r *LinuxResources) Copy() *LinuxResources {
 	}
 	o.BlockioClass = String(r.BlockioClass)
 	o.RdtClass = String(r.RdtClass)
+
+	var devs []string
+	for _, d := range r.Devices {
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+	}
+	fmt.Printf("karlbaumg: (r *LinuxResources) Copy() %s\n", strings.Join(devs, ","))
 
 	return o
 }

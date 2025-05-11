@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -709,6 +710,11 @@ func (stub *stub) CreateContainer(ctx context.Context, req *api.CreateContainerR
 		return nil, nil
 	}
 	adjust, update, err := handler(ctx, req.Pod, req.Container)
+	var devs []string
+	for _, d := range adjust.Linux.Resources.Devices {
+		devs = append(devs, fmt.Sprintf("device rule %s %d:%d %s", d.Type, d.Major.GetValue(), d.Minor.GetValue(), d.Access))
+	}
+	fmt.Printf("karlbaumg: (stub *stub) CreateContainer(ctx context.Context, req *api.CreateContainerRequest) %s\n", strings.Join(devs, ","))
 	return &api.CreateContainerResponse{
 		Adjust: adjust,
 		Update: update,
